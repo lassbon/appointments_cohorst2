@@ -1,19 +1,46 @@
+const Joi = require('joi')
 
 const { createAppointment, checkAppointmentByEmail} = require('../models/query')
 
 const booking = (req, res) => {
 
-    const { name, email, location, time, messages } = req.body
+    const schema = Joi.object({
+
+        name: Joi.string().min(3).required(),
+        location: Joi.string().min(3).required(),
+        time: Joi.string().min(3).required(),
+        messages: Joi.string().min(3).required(),
+        email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }).required()
+       
+     })
+       
     
-    if (!name || !email || !location || !time || !messages) {
+    //error == undefined is input is valid
+   
+
+
+
+    // const { name, email, location, time, messages } = req.body
+    
+    // if (!name || !email || !location || !time || !messages) {
         
-        res.status(400).json({
-            status:false,
-            message: "All fields required"
-        })
-    }
+    //     res.status(400).json({
+    //         status:false,
+    //         message: "All fields required"
+    //     })
+    // }
 
     try {
+
+        const { error, value } = schema.validate(req.body)
+    
+        if (error != undefined) {
+    
+            throw new Error(error.details[0].message)
+        }
+      
+          const { name, email, location, time, messages } = req.body
+
         checkAppointmentByEmail(email)
         .then(responseFromCheckEmail => {
             if (responseFromCheckEmail.length > 0) {
@@ -39,12 +66,12 @@ const booking = (req, res) => {
             })
         })
 
-    
+
     
 } catch (error) {
     
         res.status(400).json({
-            status : fasle,
+            status : false,
             message: error.message
         })
 }
